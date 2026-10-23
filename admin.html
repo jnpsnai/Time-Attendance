@@ -9,10 +9,13 @@
     <style>
         body { background-color: #f8f9fa; }
         .sidebar { min-height: 100vh; background-color: #212529; color: white; padding-top: 20px; }
-        .nav-link { color: #adb5bd; }
+        .nav-link { color: #adb5bd; cursor: pointer; }
         .nav-link:hover, .nav-link.active { color: #fff; background: rgba(255,255,255,0.1); border-radius: 5px; }
         .main-content { padding: 30px; }
         .card { border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-radius: 10px; }
+        .section-panel { display: none; }
+        .section-panel.active { display: block; }
+        .alert-row { background-color: #ffeaea !important; color: #d32f2f; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -25,10 +28,13 @@
                 <h5 class="fw-bold mb-4 text-center">HRMS Admin</h5>
                 <ul class="nav flex-column">
                     <li class="nav-item">
-                        <a class="nav-link active" href="#">➕ เพิ่มพนักงาน (Onboarding)</a>
+                        <a class="nav-link active" onclick="switchTab('dashboard')">📊 Dashboard วันลา</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#" onclick="alert('Feature in development')">📊 รายงานเวลา (Reports)</a>
+                        <a class="nav-link" onclick="switchTab('leave')">🗓️ บันทึกการลา</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" onclick="switchTab('onboard')">➕ เพิ่มพนักงานใหม่</a>
                     </li>
                 </ul>
             </div>
@@ -36,46 +42,79 @@
 
         <!-- Main Content -->
         <main class="col-md-9 ms-sm-auto col-lg-10 main-content">
-            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-4 border-bottom">
-                <h1 class="h3 fw-bold text-dark">Employee Onboarding</h1>
+            
+            <!-- Dashboard Section -->
+            <div id="dashboard" class="section-panel active">
+                <div class="d-flex justify-content-between pb-2 mb-4 border-bottom">
+                    <h1 class="h3 fw-bold">Leave Dashboard</h1>
+                    <button class="btn btn-primary btn-sm" onclick="loadDashboard()">🔄 รีเฟรชข้อมูล</button>
+                </div>
+                <div class="card p-4">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>รหัส</th>
+                                    <th>ชื่อ - นามสกุล</th>
+                                    <th>แผนก</th>
+                                    <th>พักร้อนคงเหลือ</th>
+                                    <th>ลาป่วยคงเหลือ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dashboardTable">
+                                <tr><td colspan="5" class="text-center text-muted">กำลังโหลดข้อมูล...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
 
-            <div class="card p-4 col-lg-8">
-                <h5 class="mb-4">ข้อมูลพนักงานใหม่</h5>
-                <form id="addEmpForm">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
+            <!-- Record Leave Section -->
+            <div id="leave" class="section-panel">
+                <div class="pb-2 mb-4 border-bottom"><h1 class="h3 fw-bold">บันทึกการลา</h1></div>
+                <div class="card p-4 col-lg-6">
+                    <form id="recordLeaveForm">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">วันที่ลา</label>
+                            <input type="date" class="form-control" id="leaveDate" required>
+                        </div>
+                        <div class="mb-3">
                             <label class="form-label small fw-bold">รหัสพนักงาน</label>
-                            <input type="text" class="form-control" id="empId" required>
+                            <input type="text" class="form-control" id="leaveEmpId" required>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label small fw-bold">ชื่อ - นามสกุล</label>
-                            <input type="text" class="form-control" id="name" required>
+                        <div class="mb-4">
+                            <label class="form-label small fw-bold">ประเภทการลา</label>
+                            <select class="form-select" id="leaveType" required>
+                                <option value="">-- เลือกประเภท --</option>
+                                <option value="พักร้อน">พักร้อน (Annual Leave)</option>
+                                <option value="ลาป่วย">ลาป่วย (Sick Leave)</option>
+                            </select>
                         </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">แผนก (Department)</label>
-                        <select class="form-select" id="department" required>
-                            <option value="">-- เลือกแผนก --</option>
-                            <option value="IT">Information Technology</option>
-                            <option value="HR">Human Resources</option>
-                            <option value="Sales">Sales & Marketing</option>
-                            <option value="Operations">Operations</option>
-                        </select>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-4">
-                            <label class="form-label small fw-bold">สิทธิ์พักร้อน (วัน/ปี)</label>
-                            <input type="number" class="form-control" id="annualQuota" value="10" required>
-                        </div>
-                        <div class="col-md-6 mb-4">
-                            <label class="form-label small fw-bold">สิทธิ์ลาป่วย (วัน/ปี)</label>
-                            <input type="number" class="form-control" id="sickQuota" value="30" required>
-                        </div>
-                    </div>
-                    <button type="submit" class="btn btn-dark w-100" id="adminSubmitBtn">สร้างโปรไฟล์พนักงาน</button>
-                </form>
+                        <button type="submit" class="btn btn-warning w-100 fw-bold" id="btnRecordLeave">บันทึกวันลา</button>
+                    </form>
+                </div>
             </div>
+
+            <!-- Onboard Section (ของเดิม) -->
+            <div id="onboard" class="section-panel">
+                <div class="pb-2 mb-4 border-bottom"><h1 class="h3 fw-bold">Employee Onboarding</h1></div>
+                <!-- วาง Form เพิ่มพนักงานจากรอบที่แล้วตรงนี้ (ย่อโค้ดเพื่อความกระชับ) -->
+                <div class="card p-4 col-lg-8">
+                     <form id="addEmpForm">
+                        <div class="row">
+                            <div class="col-6 mb-3"><input type="text" class="form-control" id="empId" placeholder="รหัส" required></div>
+                            <div class="col-6 mb-3"><input type="text" class="form-control" id="name" placeholder="ชื่อ" required></div>
+                        </div>
+                        <div class="mb-3"><input type="text" class="form-control" id="department" placeholder="แผนก" required></div>
+                        <div class="row">
+                            <div class="col-6 mb-4"><input type="number" class="form-control" id="annualQuota" placeholder="สิทธิ์พักร้อน" required></div>
+                            <div class="col-6 mb-4"><input type="number" class="form-control" id="sickQuota" placeholder="สิทธิ์ลาป่วย" required></div>
+                        </div>
+                        <button type="submit" class="btn btn-dark w-100">สร้างโปรไฟล์พนักงาน</button>
+                    </form>
+                </div>
+            </div>
+
         </main>
     </div>
 </div>
@@ -83,44 +122,84 @@
 <script>
     const API_URL = 'YOUR_WEB_APP_URL_HERE'; // ใส่ URL ที่ Deploy ใหม่
 
-    document.getElementById('addEmpForm').addEventListener('submit', async (e) => {
+    // ระบบเปลี่ยนหน้า (Tab Navigation)
+    function switchTab(tabId) {
+        document.querySelectorAll('.section-panel').forEach(panel => panel.classList.remove('active'));
+        document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+        
+        document.getElementById(tabId).classList.add('active');
+        event.currentTarget.classList.add('active');
+
+        if(tabId === 'dashboard') loadDashboard();
+    }
+
+    // โหลดข้อมูล Dashboard
+    async function loadDashboard() {
+        const tbody = document.getElementById('dashboardTable');
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center">กำลังดึงข้อมูลจาก Database...</td></tr>';
+        
+        try {
+            const res = await fetch(API_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: "getDashboardData" })
+            });
+            const data = await res.json();
+            
+            if(data.status === "success") {
+                tbody.innerHTML = '';
+                data.data.forEach(emp => {
+                    // สร้างเงื่อนไขแจ้งเตือนสีแดงถ้าโควต้าหมด
+                    const annualClass = emp.isAnnualEmpty ? 'alert-row' : '';
+                    const sickClass = emp.isSickEmpty ? 'alert-row' : '';
+                    
+                    const row = `
+                        <tr>
+                            <td>${emp.id}</td>
+                            <td>${emp.name}</td>
+                            <td>${emp.dept}</td>
+                            <td class="${annualClass}">${emp.annualRemain} วัน ${emp.isAnnualEmpty ? '(หมด!)' : ''}</td>
+                            <td class="${sickClass}">${emp.sickRemain} วัน ${emp.isSickEmpty ? '(หมด!)' : ''}</td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
+            }
+        } catch (err) {
+            tbody.innerHTML = `<tr><td colspan="5" class="text-danger text-center">โหลดข้อมูลล้มเหลว: ${err.message}</td></tr>`;
+        }
+    }
+
+    // ฟังก์ชันบันทึกการลา
+    document.getElementById('recordLeaveForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const btn = document.getElementById('adminSubmitBtn');
-        btn.disabled = true;
-        btn.innerHTML = 'กำลังประมวลผล...';
+        const btn = document.getElementById('btnRecordLeave');
+        btn.innerText = 'กำลังประมวลผล...'; btn.disabled = true;
 
         const payload = {
-            action: "addEmployee",
+            action: "recordLeave",
             payload: {
-                empId: document.getElementById('empId').value.trim(),
-                name: document.getElementById('name').value.trim(),
-                department: document.getElementById('department').value,
-                annualQuota: document.getElementById('annualQuota').value,
-                sickQuota: document.getElementById('sickQuota').value
+                date: document.getElementById('leaveDate').value,
+                empId: document.getElementById('leaveEmpId').value,
+                leaveType: document.getElementById('leaveType').value
             }
         };
 
         try {
-            const response = await fetch(API_URL, {
-                method: 'POST',
-                body: JSON.stringify(payload),
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-            });
-            const result = await response.json();
-
-            if (result.status === "success") {
-                Swal.fire({ icon: 'success', title: 'Created!', text: result.message });
-                document.getElementById('addEmpForm').reset();
-            } else {
-                throw new Error(result.message);
+            const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+            const result = await res.json();
+            if(result.status === "success") {
+                Swal.fire("สำเร็จ!", "บันทึกข้อมูลการลาแล้ว", "success");
+                e.target.reset();
             }
-        } catch (error) {
-            Swal.fire({ icon: 'error', title: 'Failed', text: error.message });
+        } catch(err) {
+            Swal.fire("ผิดพลาด", err.message, "error");
         } finally {
-            btn.disabled = false;
-            btn.innerText = 'สร้างโปรไฟล์พนักงาน';
+            btn.innerText = 'บันทึกวันลา'; btn.disabled = false;
         }
     });
+
+    // โหลด Dashboard อัตโนมัติเมื่อเปิดหน้าเว็บ
+    window.onload = loadDashboard;
 </script>
 </body>
 </html>
