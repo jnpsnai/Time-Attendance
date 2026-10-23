@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>HR Admin Panel</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        .card { border: 1px solid #ccc; padding: 20px; max-width: 400px; }
+    </style>
+</head>
+<body>
+    <h2>ระบบจัดการทรัพยากรบุคคล (HR Admin)</h2>
+    
+    <div class="card">
+        <h3>เพิ่มพนักงานใหม่</h3>
+        <form id="addEmpForm">
+            <input type="text" id="empId" placeholder="รหัสพนักงาน" required><br><br>
+            <input type="text" id="name" placeholder="ชื่อ-นามสกุล" required><br><br>
+            <input type="text" id="department" placeholder="แผนก" required><br><br>
+            <input type="number" id="annualQuota" placeholder="สิทธิ์พักร้อน (วัน)" required><br><br>
+            <input type="number" id="sickQuota" placeholder="สิทธิ์ลาป่วย (วัน)" required><br><br>
+            <button type="submit">บันทึกข้อมูลพนักงาน</button>
+        </form>
+    </div>
+
+    <script>
+        // ใส่ URL Web App ของคุณตรงนี้ (ลิงก์ที่ลงท้ายด้วย /exec)
+        const scriptURL = 'YOUR_WEB_APP_URL_HERE'; 
+
+        document.getElementById('addEmpForm').addEventListener('submit', e => {
+            e.preventDefault();
+            const payload = {
+                action: "addEmployee", // ระบุว่านี่คือคำสั่งเพิ่มพนักงาน
+                empId: document.getElementById('empId').value,
+                name: document.getElementById('name').value,
+                department: document.getElementById('department').value,
+                annualQuota: document.getElementById('annualQuota').value,
+                sickQuota: document.getElementById('sickQuota').value
+            };
+
+            fetch(scriptURL, {
+                method: 'POST',
+                body: JSON.stringify(payload),
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.status === "success") {
+                    alert("เพิ่มพนักงานสำเร็จ!");
+                    document.getElementById('addEmpForm').reset();
+                }
+            })
+            .catch(error => alert("เกิดข้อผิดพลาด: " + error.message));
+        });
+    </script>
+</body>
+</html>
