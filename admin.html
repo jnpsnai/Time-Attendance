@@ -2,56 +2,125 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>HR Admin Panel</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HRMS | Admin Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        body { font-family: sans-serif; padding: 20px; }
-        .card { border: 1px solid #ccc; padding: 20px; max-width: 400px; }
+        body { background-color: #f8f9fa; }
+        .sidebar { min-height: 100vh; background-color: #212529; color: white; padding-top: 20px; }
+        .nav-link { color: #adb5bd; }
+        .nav-link:hover, .nav-link.active { color: #fff; background: rgba(255,255,255,0.1); border-radius: 5px; }
+        .main-content { padding: 30px; }
+        .card { border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-radius: 10px; }
     </style>
 </head>
 <body>
-    <h2>ระบบจัดการทรัพยากรบุคคล (HR Admin)</h2>
-    
-    <div class="card">
-        <h3>เพิ่มพนักงานใหม่</h3>
-        <form id="addEmpForm">
-            <input type="text" id="empId" placeholder="รหัสพนักงาน" required><br><br>
-            <input type="text" id="name" placeholder="ชื่อ-นามสกุล" required><br><br>
-            <input type="text" id="department" placeholder="แผนก" required><br><br>
-            <input type="number" id="annualQuota" placeholder="สิทธิ์พักร้อน (วัน)" required><br><br>
-            <input type="number" id="sickQuota" placeholder="สิทธิ์ลาป่วย (วัน)" required><br><br>
-            <button type="submit">บันทึกข้อมูลพนักงาน</button>
-        </form>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+            <div class="position-sticky px-3">
+                <h5 class="fw-bold mb-4 text-center">HRMS Admin</h5>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#">➕ เพิ่มพนักงาน (Onboarding)</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="alert('Feature in development')">📊 รายงานเวลา (Reports)</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 main-content">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-4 border-bottom">
+                <h1 class="h3 fw-bold text-dark">Employee Onboarding</h1>
+            </div>
+
+            <div class="card p-4 col-lg-8">
+                <h5 class="mb-4">ข้อมูลพนักงานใหม่</h5>
+                <form id="addEmpForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small fw-bold">รหัสพนักงาน</label>
+                            <input type="text" class="form-control" id="empId" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small fw-bold">ชื่อ - นามสกุล</label>
+                            <input type="text" class="form-control" id="name" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">แผนก (Department)</label>
+                        <select class="form-select" id="department" required>
+                            <option value="">-- เลือกแผนก --</option>
+                            <option value="IT">Information Technology</option>
+                            <option value="HR">Human Resources</option>
+                            <option value="Sales">Sales & Marketing</option>
+                            <option value="Operations">Operations</option>
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <label class="form-label small fw-bold">สิทธิ์พักร้อน (วัน/ปี)</label>
+                            <input type="number" class="form-control" id="annualQuota" value="10" required>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <label class="form-label small fw-bold">สิทธิ์ลาป่วย (วัน/ปี)</label>
+                            <input type="number" class="form-control" id="sickQuota" value="30" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-dark w-100" id="adminSubmitBtn">สร้างโปรไฟล์พนักงาน</button>
+                </form>
+            </div>
+        </main>
     </div>
+</div>
 
-    <script>
-        // ใส่ URL Web App ของคุณตรงนี้ (ลิงก์ที่ลงท้ายด้วย /exec)
-        const scriptURL = 'YOUR_WEB_APP_URL_HERE'; 
+<script>
+    const API_URL = 'YOUR_WEB_APP_URL_HERE'; // ใส่ URL ที่ Deploy ใหม่
 
-        document.getElementById('addEmpForm').addEventListener('submit', e => {
-            e.preventDefault();
-            const payload = {
-                action: "addEmployee", // ระบุว่านี่คือคำสั่งเพิ่มพนักงาน
-                empId: document.getElementById('empId').value,
-                name: document.getElementById('name').value,
+    document.getElementById('addEmpForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('adminSubmitBtn');
+        btn.disabled = true;
+        btn.innerHTML = 'กำลังประมวลผล...';
+
+        const payload = {
+            action: "addEmployee",
+            payload: {
+                empId: document.getElementById('empId').value.trim(),
+                name: document.getElementById('name').value.trim(),
                 department: document.getElementById('department').value,
                 annualQuota: document.getElementById('annualQuota').value,
                 sickQuota: document.getElementById('sickQuota').value
-            };
+            }
+        };
 
-            fetch(scriptURL, {
+        try {
+            const response = await fetch(API_URL, {
                 method: 'POST',
                 body: JSON.stringify(payload),
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' }
-            })
-            .then(res => res.json())
-            .then(data => {
-                if(data.status === "success") {
-                    alert("เพิ่มพนักงานสำเร็จ!");
-                    document.getElementById('addEmpForm').reset();
-                }
-            })
-            .catch(error => alert("เกิดข้อผิดพลาด: " + error.message));
-        });
-    </script>
+            });
+            const result = await response.json();
+
+            if (result.status === "success") {
+                Swal.fire({ icon: 'success', title: 'Created!', text: result.message });
+                document.getElementById('addEmpForm').reset();
+            } else {
+                throw new Error(result.message);
+            }
+        } catch (error) {
+            Swal.fire({ icon: 'error', title: 'Failed', text: error.message });
+        } finally {
+            btn.disabled = false;
+            btn.innerText = 'สร้างโปรไฟล์พนักงาน';
+        }
+    });
+</script>
 </body>
 </html>
