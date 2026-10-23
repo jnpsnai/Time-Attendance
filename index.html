@@ -23,6 +23,7 @@
         document.getElementById('attendanceForm').addEventListener('submit', e => {
             e.preventDefault();
             const payload = {
+                action: "attendance", // เพิ่มบรรทัดนี้
                 empId: document.getElementById('empId').value,
                 location: document.getElementById('location').value
             };
