@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>Time Attendance</title>
+</head>
+<body>
+    <h2>ระบบลงเวลาเข้า-ออกงาน</h2>
+    <form id="attendanceForm">
+        <input type="text" id="empId" placeholder="รหัสพนักงาน" required><br><br>
+        <select id="location" required>
+            <option value="">เลือกสถานที่</option>
+            <option value="สำนักงานใหญ่">สำนักงานใหญ่</option>
+            <option value="สาขา 1">สาขา 1</option>
+        </select><br><br>
+        <button type="submit">บันทึกเวลา</button>
+    </form>
+
+    <script>
+        // นำ URL ที่คัดลอกไว้มาวางในบรรทัดนี้
+        const scriptURL = 'YOUR_WEB_APP_URL_HERE';
+
+        document.getElementById('attendanceForm').addEventListener('submit', e => {
+            e.preventDefault();
+            const payload = {
+                empId: document.getElementById('empId').value,
+                location: document.getElementById('location').value
+            };
+
+            fetch(scriptURL, {
+                method: 'POST',
+                body: JSON.stringify(payload),
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' } // ป้องกันปัญหา CORS
+            })
+            .then(response => alert("บันทึกข้อมูลสำเร็จ!"))
+            .catch(error => alert("เกิดข้อผิดพลาด: " + error.message));
+        });
+    </script>
+</body>
+</html>
