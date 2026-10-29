@@ -12,16 +12,30 @@
 <div class="container py-4" style="max-width: 500px;">
     <div class="card shadow-sm p-4">
         <h4 class="fw-bold text-primary mb-4 text-center">📝 ยื่นคำขออนุมัติการลา</h4>
-        
-        <form id="requestLeaveForm">
-            <div class="mb-3">
-                <label class="form-label fw-bold small">รหัสพนักงาน</label>
-                <input type="text" id="empId" class="form-control" required>
+
+        <div class="mb-3">
+            <label class="form-label fw-bold small">รหัสพนักงาน</label>
+            <div class="input-group">
+                <input type="text" id="empId" class="form-control" placeholder="กรอกรหัสพนักงาน" required>
+                <button class="btn btn-outline-secondary" type="button" onclick="checkQuota()">เช็คสิทธิ์</button>
             </div>
+        </div>
+
+        <!-- กล่องแสดงสิทธิ์คงเหลือ -->
+        <div id="quotaBox" class="alert alert-info d-none">
+            <div class="fw-bold mb-1" id="empName">--</div>
+            <div class="small">
+                🌴 พักร้อนคงเหลือ: <span id="annRemain" class="fw-bold">0</span> วัน<br>
+                💼 ลากิจคงเหลือ: <span id="perRemain" class="fw-bold">0</span> วัน<br>
+                🏥 ลาป่วยใช้ไปแล้ว: <span id="sickUsed" class="fw-bold">0</span> วัน
+            </div>
+        </div>
+
+        <form id="leaveForm">
             <div class="mb-3">
                 <label class="form-label fw-bold small">ประเภทการลา</label>
                 <select id="leaveType" class="form-select" required>
-                    <option value="">-- เลือกประเภท --</option>
+                    <option value="">-- เลือกประเภทการลา --</option>
                     <option value="พักร้อน">ลาพักร้อน</option>
                     <option value="ลากิจ">ลากิจ</option>
                     <option value="ลาป่วย">ลาป่วย</option>
@@ -29,7 +43,7 @@
             </div>
             <div class="row mb-3">
                 <div class="col-6">
-                    <label class="form-label fw-bold small">วันที่เริ่มลา</label>
+                    <label class="form-label fw-bold small">ตั้งแต่วันที่</label>
                     <input type="date" id="startDate" class="form-control" required>
                 </div>
                 <div class="col-6">
@@ -39,7 +53,7 @@
             </div>
             <div class="mb-3">
                 <label class="form-label fw-bold small">จำนวน (วัน)</label>
-                <input type="number" step="0.5" id="days" class="form-control" required>
+                <input type="number" step="0.5" id="days" class="form-control" placeholder="เช่น 1 หรือ 0.5" required>
             </div>
             <div class="mb-4">
                 <label class="form-label fw-bold small">เหตุผลการลา</label>
@@ -51,32 +65,65 @@
 </div>
 
 <script>
-    const API_URL = 'https://script.google.com/macros/s/AKfycbxrTSaImYIS5hWMbGZFG0UkV_MEx5LGvK5JBz2is8T5MDHoXbfoZpU1mKWUX-yGx7FG/exec'; // ใส่ URL จาก Google Apps Script
+    const API_URL = 'https://script.google.com/macros/s/AKfycbxrTSaImYIS5hWMbGZFG0UkV_MEx5LGvK5JBz2is8T5MDHoXbfoZpU1mKWUX-yGx7FG/exec'; // ใส่ Web App URL ที่ได้จาก Apps Script
 
-    document.getElementById('requestLeaveForm').addEventListener('submit', async (e) => {
+    async function checkQuota() {
+        const empId = document.getElementById('empId').value.trim();
+        if (!empId) { alert("กรุณากรอกรหัสพนักงาน"); return; }
+
+        try {
+            const res = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ action: "getEmployeeQuota", payload: { empId } })
+            });
+            const result = await res.json();
+
+            if (result.status === "error") throw new Error(result.message);
+
+            document.getElementById('empName').innerText = result.data.name + " (" + result.data.department + ")";
+            document.getElementById('annRemain').innerText = result.data.annualRemain;
+            document.getElementById('perRemain').innerText = result.data.personalRemain;
+            document.getElementById('sickUsed').innerText = result.data.sickUsed;
+            document.getElementById('quotaBox').classList.remove('d-none');
+        } catch(e) {
+            alert("ไม่สามารถดึงข้อมูลได้: " + e.message);
+            document.getElementById('quotaBox').classList.add('d-none');
+        }
+    }
+
+    document.getElementById('leaveForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = document.getElementById('submitBtn');
-        btn.disabled = true; btn.innerText = 'กำลังส่งข้อมูล...';
+        btn.disabled = true; btn.innerText = 'กำลังส่งคำขอ...';
 
         const payload = {
             action: "requestLeave",
             payload: {
-                empId: document.getElementById('empId').value,
+                empId: document.getElementById('empId').value.trim(),
                 leaveType: document.getElementById('leaveType').value,
                 startDate: document.getElementById('startDate').value,
                 endDate: document.getElementById('endDate').value,
                 days: document.getElementById('days').value,
-                reason: document.getElementById('reason').value
+                reason: document.getElementById('reason').value.trim()
             }
         };
 
         try {
-            const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+            const res = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(payload)
+            });
             const result = await res.json();
+
             alert(result.message);
-            e.target.reset();
+            if (result.status === "success") {
+                e.target.reset();
+                document.getElementById('quotaBox').classList.add('d-none');
+            }
         } catch(err) {
-            alert("เกิดข้อผิดพลาดในการเชื่อมต่อระบบ");
+            alert("เกิดข้อผิดพลาดในการส่งคำขอ: " + err.message);
         } finally {
             btn.disabled = false; btn.innerText = 'ส่งคำขออนุมัติ';
         }
