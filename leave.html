@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แบบฟอร์มขออนุมัติการลา</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style> body { background-color: #f0f2f5; } .card { border-radius: 15px; border: none; } </style>
+</head>
+<body>
+
+<div class="container py-4" style="max-width: 500px;">
+    <div class="card shadow-sm p-4">
+        <h4 class="fw-bold text-primary mb-4 text-center">📝 ยื่นคำขออนุมัติการลา</h4>
+        
+        <form id="requestLeaveForm">
+            <div class="mb-3">
+                <label class="form-label fw-bold small">รหัสพนักงาน</label>
+                <input type="text" id="empId" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold small">ประเภทการลา</label>
+                <select id="leaveType" class="form-select" required>
+                    <option value="">-- เลือกประเภท --</option>
+                    <option value="พักร้อน">ลาพักร้อน</option>
+                    <option value="ลากิจ">ลากิจ</option>
+                    <option value="ลาป่วย">ลาป่วย</option>
+                </select>
+            </div>
+            <div class="row mb-3">
+                <div class="col-6">
+                    <label class="form-label fw-bold small">วันที่เริ่มลา</label>
+                    <input type="date" id="startDate" class="form-control" required>
+                </div>
+                <div class="col-6">
+                    <label class="form-label fw-bold small">ถึงวันที่</label>
+                    <input type="date" id="endDate" class="form-control" required>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold small">จำนวน (วัน)</label>
+                <input type="number" step="0.5" id="days" class="form-control" required>
+            </div>
+            <div class="mb-4">
+                <label class="form-label fw-bold small">เหตุผลการลา</label>
+                <textarea id="reason" class="form-control" rows="2" required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary w-100 fw-bold py-2" id="submitBtn">ส่งคำขออนุมัติ</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    const API_URL = 'YOUR_WEB_APP_URL_HERE'; // ใส่ URL จาก Google Apps Script
+
+    document.getElementById('requestLeaveForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true; btn.innerText = 'กำลังส่งข้อมูล...';
+
+        const payload = {
+            action: "requestLeave",
+            payload: {
+                empId: document.getElementById('empId').value,
+                leaveType: document.getElementById('leaveType').value,
+                startDate: document.getElementById('startDate').value,
+                endDate: document.getElementById('endDate').value,
+                days: document.getElementById('days').value,
+                reason: document.getElementById('reason').value
+            }
+        };
+
+        try {
+            const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+            const result = await res.json();
+            alert(result.message);
+            e.target.reset();
+        } catch(err) {
+            alert("เกิดข้อผิดพลาดในการเชื่อมต่อระบบ");
+        } finally {
+            btn.disabled = false; btn.innerText = 'ส่งคำขออนุมัติ';
+        }
+    });
+</script>
+</body>
+</html>
